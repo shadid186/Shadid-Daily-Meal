@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Shadid Meal</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:#f4f6f8;
+    color:#222;
+}
+
+header{
+    background:#198754;
+    color:white;
+    padding:20px;
+    text-align:center;
+}
+
+.container{
+    max-width:700px;
+    margin:20px auto;
+    padding:15px;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    margin-bottom:15px;
+    border-radius:12px;
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+}
+
+h2{
+    margin-top:0;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin:7px 0;
+    border:1px solid #ddd;
+    border-radius:8px;
+    font-size:16px;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    border:0;
+    border-radius:8px;
+    background:#198754;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#146c43;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+}
+
+th,td{
+    border:1px solid #ddd;
+    padding:10px;
+    text-align:center;
+}
+
+th{
+    background:#198754;
+    color:white;
+}
+
+.result{
+    background:#e9f7ef;
+    padding:15px;
+    border-radius:10px;
+    margin-top:15px;
+}
+
+.delete{
+    background:#dc3545;
+    padding:6px 10px;
+    width:auto;
+    margin:0;
+}
+
+.total{
+    font-size:20px;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🍚 Shadid Meal</h1>
+    <p>Daily Meal হিসাব</p>
+</header>
+
+<div class="container">
+
+    <!-- Meal Rate -->
+    <div class="card">
+        <h2>⚙️ Meal Rate</h2>
+
+        <input
+            type="number"
+            id="mealRate"
+            value="55"
+            placeholder="প্রতি Meal কত টাকা?"
+        >
+
+        <button onclick="saveRate()">Rate Save</button>
+    </div>
+
+
+    <!-- Add Member -->
+    <div class="card">
+
+        <h2>👤 Member যোগ করুন</h2>
+
+        <input
+            type="text"
+            id="memberName"
+            placeholder="Member এর নাম"
+        >
+
+        <button onclick="addMember()">
+            + Member Add
+        </button>
+
+    </div>
+
+
+    <!-- Member List -->
+    <div class="card">
+
+        <h2>📋 Meal হিসাব</h2>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>নাম</th>
+                    <th>Meal</th>
+                    <th>খরচ</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+
+            <tbody id="memberList"></tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- Total -->
+    <div class="card">
+
+        <h2>📊 মোট হিসাব</h2>
+
+        <div class="result">
+
+            <p>
+                মোট Member:
+                <b id="totalMembers">0</b>
+            </p>
+
+            <p>
+                মোট Meal:
+                <b id="totalMeals">0</b>
+            </p>
+
+            <p>
+                Meal Rate:
+                ৳<b id="showRate">55</b>
+            </p>
+
+            <p class="total">
+                মোট খরচ:
+                ৳<span id="totalCost">0</span>
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+let members = [];
+
+let mealRate = 55;
+
+
+// Load saved data
+window.onload = function(){
+
+    let savedMembers =
+        localStorage.getItem("shadidMembers");
+
+    let savedRate =
+        localStorage.getItem("shadidMealRate");
+
+    if(savedMembers){
+        members = JSON.parse(savedMembers);
+    }
+
+    if(savedRate){
+        mealRate = Number(savedRate);
+        document.getElementById("mealRate").value = mealRate;
+    }
+
+    displayMembers();
+};
+
+
+// Save rate
+function saveRate(){
+
+    let rate =
+        Number(document.getElementById("mealRate").value);
+
+    if(rate <= 0){
+        alert("সঠিক Meal Rate দিন");
+        return;
+    }
+
+    mealRate = rate;
+
+    localStorage.setItem(
+        "shadidMealRate",
+        mealRate
+    );
+
+    displayMembers();
+
+    alert("Meal Rate Save হয়েছে ✅");
+}
+
+
+// Add member
+function addMember(){
+
+    let name =
+        document.getElementById("memberName").value.trim();
+
+    if(name === ""){
+        alert("Member এর নাম লিখুন");
+        return;
+    }
+
+    members.push({
+        name:name,
+        meal:0
+    });
+
+    document.getElementById("memberName").value = "";
+
+    saveData();
+
+    displayMembers();
+}
+
+
+// Change meal
+function changeMeal(index, value){
+
+    let meal = Number(value);
+
+    if(meal < 0){
+        meal = 0;
+    }
+
+    members[index].meal = meal;
+
+    saveData();
+
+    displayMembers();
+}
+
+
+// Delete member
+function deleteMember(index){
+
+    if(confirm("এই Member-কে Delete করবেন?")){
+
+        members.splice(index,1);
+
+        saveData();
+
+        displayMembers();
+    }
+}
+
+
+// Display members
+function displayMembers(){
+
+    let table =
+        document.getElementById("memberList");
+
+    table.innerHTML = "";
+
+    let totalMeals = 0;
+
+    members.forEach((member,index)=>{
+
+        totalMeals += Number(member.meal);
+
+        let cost =
+            Number(member.meal) * mealRate;
+
+        table.innerHTML += `
+
+        <tr>
+
+            <td>
+                ${member.name}
+            </td>
+
+            <td>
+
+                <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value="${member.meal}"
+                    onchange="changeMeal(${index},this.value)"
+                    style="width:90px"
+                >
+
+            </td>
+
+            <td>
+                ৳${cost.toFixed(2)}
+            </td>
+
+            <td>
+
+                <button
+                    class="delete"
+                    onclick="deleteMember(${index})"
+                >
+                    Delete
+                </button>
+
+            </td>
+
+        </tr>
+
+        `;
+
+    });
+
+
+    let totalCost =
+        totalMeals * mealRate;
+
+
+    document.getElementById("totalMembers")
+        .innerText = members.length;
+
+    document.getElementById("totalMeals")
+        .innerText = totalMeals;
+
+    document.getElementById("showRate")
+        .innerText = mealRate;
+
+    document.getElementById("totalCost")
+        .innerText =
+        totalCost.toFixed(2);
+
+}
+
+
+// Save everything
+function saveData(){
+
+    localStorage.setItem(
+        "shadidMembers",
+        JSON.stringify(members)
+    );
+
+}
+
+</script>
+
+</body>
+</html>
